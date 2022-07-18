@@ -1,0 +1,10 @@
+-# メモのリスト表示
+.navs
+  %button{:onclick => "location.href='/memos/new'"} メモを追加
+
+.memo_list
+  %h1 登録済みメモのリスト
+  %ul
+    - titles.each do |element|
+      %li
+        %a{ href: "/memos/#{element[:id]}"}= "#{element[:id]} : #{element[:title]}"

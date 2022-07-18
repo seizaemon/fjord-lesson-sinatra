@@ -1,0 +1,27 @@
+-# 編集画面（新規・編集共通）
+.navs
+  %button{ :type => 'button', :onclick => "location.href='/'", :form => 'nav' } トップへ戻る
+
+
+%form{ :name => "memo_data",:method => 'post', :action => '/memos'}
+  .title
+    %h1 タイトル
+    - if id
+      %input{ :type => 'text' , :name => 'title', :value => title}
+    - else
+      %input{ :type => 'text' , :name => 'title' }
+
+  .content 
+    %h1 メモの内容
+    - if id
+      %textarea{ :name => 'content' }= content
+    - else 
+      %textarea{ :name => 'content' }
+
+  .controls
+    - if id
+      %input{ :type => 'hidden', :name => '_method', :value => 'PATCH'}
+      %input{ :type => 'submit', :formaction => "/memos/#{id}", :value => 'メモを保存'}
+    - else
+      %input{ :type => 'submit', :value => '新規作成' }
+
