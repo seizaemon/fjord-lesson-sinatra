@@ -4,7 +4,7 @@ require 'bundler/setup'
 require 'sinatra'
 require 'sinatra/reloader'
 require 'haml'
-require 'sass'
+require 'sassc'
 require 'pathname'
 require_relative 'lib/data_controller'
 
@@ -119,10 +119,10 @@ end
 # エラー画面
 not_found do
   err_msg = 'ページが見つかりません'
-  haml :error, locals: { error_msg: err_msg, page_title: 'page not found' }, layout: :layout
+  haml :error, locals: { error_msg: err_msg, page_title: 'page not found' }
 end
 
 error do
   err_msg = '何らかのエラーが発生しました。'
-  haml :error, locals: { error_msg: err_msg, page_title: 'error' }, layout: :layout
+  haml :error, locals: { error_msg: err_msg, page_title: 'error' }
 end
