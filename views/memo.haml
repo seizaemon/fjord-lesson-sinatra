@@ -3,11 +3,11 @@
 
 .title
   %h1 タイトル
-  %p= title
+  %p&= title
 
 .content
   %h1 メモの内容
-  %p= content
+  %p&= content
 
 .controls
   %form{ :name => 'memo_delete', :action => "/memos/#{id}", :method => 'post' }

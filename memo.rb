@@ -10,7 +10,7 @@ require_relative 'lib/data_controller'
 
 # sinatra config
 configure do
-  set :haml, format: :html5
+  set :haml, format: :html5, escape_filter_interpolations: true
 
   enable :sessions
   # Rack::Overrideを使うとformでもPATCH, DELETEにルーティングできる
@@ -46,6 +46,10 @@ helpers do
 
   def memo_exist?(id)
     settings.memo_data.exist?(id)
+  end
+
+  def escaped(text)
+    Rack::Utils.escape_html(text)
   end
 end
 
@@ -83,10 +87,10 @@ get '/memos/:memo_id' do
   raise Sinatra::NotFound if memo.nil?
 
   haml :memo, locals: {
-    id: params['memo_id'],
-    title: memo[:title],
-    content: memo[:content],
-    page_title: "メモ #{params['memo_id']}"
+    id: escaped(params['memo_id']),
+    title: escaped(memo[:title]),
+    content: escaped(memo[:content]),
+    page_title: escaped("メモ #{params['memo_id']}")
   }
 end
 
@@ -94,10 +98,10 @@ end
 get '/memos/:memo_id/edit' do
   memo = select_memo(params['memo_id'].to_i)
   haml :edit, locals: {
-    id: params['memo_id'],
-    title: memo[:title],
-    content: memo[:content],
-    page_title: "メモを編集 #{params['memo_id']}"
+    id: escaped(params['memo_id']),
+    title: escaped(memo[:title]),
+    content: escaped(memo[:content]),
+    page_title: escaped("メモを編集 #{params['memo_id']}")
   }
 end
 
@@ -119,10 +123,10 @@ end
 # エラー画面
 not_found do
   err_msg = 'ページが見つかりません'
-  haml :error, locals: { error_msg: err_msg, page_title: 'page not found' }
+  haml :error, locals: { error_msg: escaped(err_msg), page_title: 'page not found' }
 end
 
 error do
   err_msg = '何らかのエラーが発生しました。'
-  haml :error, locals: { error_msg: err_msg, page_title: 'error' }
+  haml :error, locals: { error_msg: escaped(err_msg), page_title: 'error' }
 end

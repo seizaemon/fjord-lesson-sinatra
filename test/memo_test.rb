@@ -116,3 +116,47 @@ class MemoAppUpdateDeleteTest < MemoCommonTest
     File.delete("#{__dir__}/test_app_data")
   end
 end
+
+class MemoAppXSSTest < MemoCommonTest
+  def setup
+    @data_file_path = "#{__dir__}/test_app_data"
+    inputs = [
+      { id: 1, title: 'メモ1', content: 'このメモはテスト1の内容です。' }
+    ]
+    data = PStore.new(@data_file_path)
+    data.transaction do
+      inputs.each do |input|
+        data[input[:id]] = { title: input[:title], content: input[:content] }
+      end
+      data.commit
+    end
+  end
+
+  def app
+    Sinatra::Application
+  end
+
+  def test_xss_post
+    post(
+      '/memos',
+      { title: '<b>テスト</b>', content: "<script>alert('XSS')</script>" },
+      'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
+    )
+    assert_match last_response.body, '&lt;b&gt;テスト&lt;/b&gt;'
+    assert_match last_response.body, '&lt;script&gt;alert(&#039;XSS&#039;)&lt;/script&gt;'
+  end
+
+  def test_xss_patch
+    patch(
+      '/memos/1',
+      { title: '<b>テスト</b>', content: "<script>alert('XSS')</script>" },
+      'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
+    )
+    assert_match last_response.body, '&lt;b&gt;テスト&lt;/b&gt;'
+    assert_match last_response.body, '&lt;script&gt;alert(&#039;XSS&#039;)&lt;/script&gt;'
+  end
+
+  def teardown
+    File.delete("#{__dir__}/test_app_data")
+  end
+end
