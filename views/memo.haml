@@ -1,0 +1,17 @@
+.navs
+  %button{ :onclick => "location.href='/'" } 戻る
+
+.title
+  %h1 タイトル
+  %p&= title
+
+.content
+  %h1 メモの内容
+  %p&= content
+
+.controls
+  %form{ :name => 'memo_delete', :action => "/memos/#{id}", :method => 'post' }
+    %input{ :type => 'hidden', :name => '_method', :value => 'DELETE' }
+    %input{ :type => 'submit', :value => 'メモを削除' }
+
+    %button{ :type => 'button', :onclick => "location.href='/memos/#{id}/edit'"} メモを編集
