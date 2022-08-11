@@ -8,15 +8,24 @@ require 'sassc'
 require 'pathname'
 require_relative 'lib/data_controller'
 
+config = {
+  host: 'database',
+  dbname: 'memo_db',
+  user: 'postgres',
+  password: 'fjord',
+  port: 5432
+}
+
 # sinatra config
 configure do
+  set :bind, '0.0.0.0'
   set :haml, format: :html5, escape_filter_interpolations: true
 
   enable :sessions
   # Rack::Overrideを使うとformでもPATCH, DELETEにルーティングできる
   enable :method_override
   set :show_exceptions, :after_handler
-  set :memo_data, MemoData.new
+  set :memo_data, MemoData.new(config)
 end
 
 helpers do

@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
 # モジュールの読み込み時に環境変数が解決されるからこの位置に書く
-ENV['MEMO_APP_STORE'] = "#{__dir__}/test_app_data"
 require_relative '../memo'
 require 'minitest/autorun'
 require 'rack/test'
-require 'tmpdir'
 
 class MemoCommonTest < Minitest::Test
   include Rack::Test::Methods
@@ -19,20 +17,41 @@ class MemoCommonTest < Minitest::Test
   end
 end
 
-class MemoAppCreateTest < MemoCommonTest
+module MemoTestConfig
   def setup
-    @data_file_path = "#{__dir__}/test_app_data"
+    config = {
+      host: 'database', dbname: 'memo_db',
+      user: 'postgres', password: 'fjord',
+      port: 5432
+    }
     inputs = [
-      { id: 1, title: 'メモ1', content: 'このメモはテスト1の内容です。' }
+      { title: 'メモ1', content: 'このメモはテスト1の内容です。' },
+      { title: 'メモ2', content: 'このメモはテスト2の内容です。' }
     ]
-    data = PStore.new(@data_file_path)
-    data.transaction do
+    drop_stmt = 'TRUNCATE TABLE memos RESTART IDENTITY;'
+    insert_stmt = 'INSERT INTO memos (title, content) VALUES ($1, $2);'
+
+    @conn = PG.connect(**config)
+    @conn.exec(drop_stmt)
+
+    @conn.prepare('insert', insert_stmt)
+    @conn.transaction do |c|
       inputs.each do |input|
-        data[input[:id]] = { title: input[:title], content: input[:content] }
+        c.exec_prepared('insert', [input[:title], input[:content]])
       end
-      data.commit
     end
+
+    @memo_data = MemoData.new(config)
   end
+
+  def teardown
+    drop_stmt = 'TRUNCATE TABLE memos RESTART IDENTITY;'
+    @conn.exec(drop_stmt)
+  end
+end
+
+class MemoAppCreateTest < MemoCommonTest
+  include MemoTestConfig
 
   def app
     Sinatra::Application
@@ -47,14 +66,14 @@ class MemoAppCreateTest < MemoCommonTest
   def test_create_and_get
     post(
       '/memos',
-      { title: 'test2', content: 'test_content' },
+      { title: 'test3', content: 'test_content' },
       'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
     )
     common_test
     assert_equal last_response.status, 302
-    assert_equal last_response.location, "#{BASE_URL}/memos/2"
+    assert_equal last_response.location, "#{BASE_URL}/memos/3"
 
-    get '/memos/2'
+    get '/memos/3'
     assert last_response.ok?
   end
 
@@ -63,27 +82,10 @@ class MemoAppCreateTest < MemoCommonTest
     common_test
     assert last_response.not_found?
   end
-
-  def teardown
-    File.delete("#{__dir__}/test_app_data")
-  end
 end
 
 class MemoAppUpdateDeleteTest < MemoCommonTest
-  def setup
-    @data_file_path = "#{__dir__}/test_app_data"
-    inputs = [
-      { id: 1, title: 'メモ1', content: 'このメモはテスト1の内容です。' },
-      { id: 2, title: 'メモ2', content: 'このメモはテスト2の内容です。' }
-    ]
-    data = PStore.new(@data_file_path)
-    data.transaction do
-      inputs.each do |input|
-        data[input[:id]] = { title: input[:title], content: input[:content] }
-      end
-      data.commit
-    end
-  end
+  include MemoTestConfig
 
   def app
     Sinatra::Application
@@ -111,26 +113,10 @@ class MemoAppUpdateDeleteTest < MemoCommonTest
     get '/memos/2'
     assert last_response.status, 404
   end
-
-  def teardown
-    File.delete("#{__dir__}/test_app_data")
-  end
 end
 
 class MemoAppXSSTest < MemoCommonTest
-  def setup
-    @data_file_path = "#{__dir__}/test_app_data"
-    inputs = [
-      { id: 1, title: 'メモ1', content: 'このメモはテスト1の内容です。' }
-    ]
-    data = PStore.new(@data_file_path)
-    data.transaction do
-      inputs.each do |input|
-        data[input[:id]] = { title: input[:title], content: input[:content] }
-      end
-      data.commit
-    end
-  end
+  include MemoTestConfig
 
   def app
     Sinatra::Application
@@ -154,9 +140,5 @@ class MemoAppXSSTest < MemoCommonTest
     )
     assert_match last_response.body, '&lt;b&gt;テスト&lt;/b&gt;'
     assert_match last_response.body, '&lt;script&gt;alert(&#039;XSS&#039;)&lt;/script&gt;'
-  end
-
-  def teardown
-    File.delete("#{__dir__}/test_app_data")
   end
 end
