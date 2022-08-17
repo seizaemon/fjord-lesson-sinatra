@@ -25,7 +25,7 @@ configure do
   # Rack::Overrideを使うとformでもPATCH, DELETEにルーティングできる
   enable :method_override
   set :show_exceptions, :after_handler
-  set :memo_data, MemoData.new(config)
+  set :memo_data, Memo.new(config)
 end
 
 helpers do

@@ -41,7 +41,7 @@ module MemoTestConfig
       end
     end
 
-    @memo_data = MemoData.new(config)
+    @memo_data = Memo.new(config)
   end
 
   def teardown
