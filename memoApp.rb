@@ -6,7 +6,7 @@ require 'sinatra/reloader'
 require 'haml'
 require 'sassc'
 require 'pathname'
-require_relative 'lib/data_controller'
+require_relative 'lib/memo'
 
 config = {
   host: 'database',

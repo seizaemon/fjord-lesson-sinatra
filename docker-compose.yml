@@ -20,7 +20,7 @@ services:
     volumes:
       - .:/opt/app
       - /opt/app/data/
-    command: bundle exec ruby memo.rb
+    command: bundle exec ruby memoApp.rb
     links:
       - "db:database"
     depends_on:

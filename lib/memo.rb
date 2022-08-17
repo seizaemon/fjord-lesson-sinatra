@@ -4,8 +4,6 @@ require 'pg'
 require 'logger'
 
 class MemoData
-  attr_reader :conn, :logger
-
   def initialize(config)
     @conn = PG.connect(**config)
     @conn.prepare('select_memo', 'SELECT id, title, content FROM memos WHERE id = $1 ;')

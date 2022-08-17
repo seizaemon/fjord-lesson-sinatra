@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # モジュールの読み込み時に環境変数が解決されるからこの位置に書く
-require_relative '../memo'
+require_relative '../memoApp'
 require 'minitest/autorun'
 require 'rack/test'
 
